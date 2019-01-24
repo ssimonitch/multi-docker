@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+  
+before_install:
+  - docker build -t ssimonitch/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run ssimonitch/react-test npm test -- --coverage
+  
+after_success:
+  - docker build -t ssimonitch/multi-client ./client
+  - docker build -t ssimonitch/multi-nginx ./nginx
+  - docker build -t ssimonitch/multi-server ./server
+  - docker build -t ssimonitch/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to DockerHub
+  - docker push ssimonitch/multi-client
+  - docker push ssimonitch/multi-nginx
+  - docker push ssimonitch/multi-server
+  - docker push ssimonitch/multi-worker
